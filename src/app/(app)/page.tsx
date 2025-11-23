@@ -177,7 +177,7 @@ export default function Home() {
           </div>
 
           <div className="parcelito-list">
-            <div className="parcelito-card" onClick={() => showToast('Opening Blue Chips...')}>
+            <div className="parcelito-card" onClick={() => showToast('Open in World App')}>
               <div className="parcelito-icon" style={{background: 'linear-gradient(135deg, #627EEA, #8B5CF6)'}}>
                 <span>ETH</span>
               </div>
@@ -191,7 +191,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="parcelito-card" onClick={() => showToast('Opening Real World...')}>
+            <div className="parcelito-card" onClick={() => showToast('Open in World App')}>
               <div className="parcelito-icon" style={{background: 'linear-gradient(135deg, #F7931A, #FFD700)'}}>
                 <span>RWA</span>
               </div>
@@ -211,7 +211,7 @@ export default function Home() {
           </div>
 
           <div className="activity-list">
-            <div className="activity-item" onClick={() => showToast('Viewing purchase...')}>
+            <div className="activity-item" onClick={() => showToast('Open in World App')}>
               <div className="activity-icon buy">+</div>
               <div className="activity-info">
                 <div className="activity-title">Bought Blue Chips</div>
@@ -219,7 +219,7 @@ export default function Home() {
               </div>
               <div className="activity-amount">$200.00</div>
             </div>
-            <div className="activity-item" onClick={() => showToast('Viewing gift...')}>
+            <div className="activity-item" onClick={() => showToast('Open in World App')}>
               <div className="activity-icon gift">G</div>
               <div className="activity-info">
                 <div className="activity-title">Gift from @alice</div>
