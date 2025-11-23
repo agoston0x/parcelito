@@ -1,36 +1,68 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Parcelito
+
+Token baskets for everyone. A World Mini App for buying, creating, and gifting curated token portfolios.
+
+**ETHGlobal Buenos Aires 2025**
+
+## Features
+
+- **Buy** - Purchase curated token baskets with one transaction
+- **Create** - Build your own token basket for others to follow
+- **Gift** - Send crypto gifts to friends via World ID or email
+
+## Tech Stack
+
+- **World Chain** - Free gas for World ID verified users
+- **World MiniKit** - Native World App integration
+- **ERC-6551 TBAs** - Each basket is an NFT that owns tokens
+- **Uniswap** - Decentralized token swaps
+- **Supabase** - Real-time presentation sync
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+# Install dependencies
+npm install
+
+# Copy env example and fill in values
+cp .env.local.example .env.local
+
+# Run development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to see the app.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Presentation Mode
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The `/ethglobal` route is a real-time presentation for demos:
 
-## Learn More
+- **Viewer mode**: `https://your-domain.com/ethglobal`
+- **Presenter mode**: `https://your-domain.com/ethglobal?presenter=YOUR_SECRET`
 
-To learn more about Next.js, take a look at the following resources:
+Presenter can control slides with arrow keys or on-screen buttons. All viewers sync in real-time.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Supabase Setup
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Run the SQL in `supabase-setup.sql` in your Supabase dashboard to enable real-time sync.
 
-## Deploy on Vercel
+## Environment Variables
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+NEXT_PUBLIC_PRESENTER_TOKEN=your_secret_presenter_token
+NEXT_PUBLIC_WLD_APP_ID=your_world_app_id
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deploy
+
+Deploy to Vercel:
+
+```bash
+vercel
+```
+
+## License
+
+MIT
