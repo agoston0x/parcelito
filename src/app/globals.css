@@ -375,3 +375,40 @@ button { -webkit-tap-highlight-color: transparent; user-select: none; }
   from { opacity: 1; transform: translateX(-50%) translateY(0); }
   to { opacity: 0; transform: translateX(-50%) translateY(20px); }
 }
+
+/* Splash Screen */
+.splash-screen {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, var(--orange-primary), var(--orange-light));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: splashFadeOut 0.4s ease 2s forwards;
+}
+
+.splash-logo {
+  width: 120px;
+  height: 120px;
+  border-radius: 28px;
+  animation: wiggleZoom 2s ease forwards;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes wiggleZoom {
+  0% { transform: scale(1) rotate(0deg); }
+  10% { transform: scale(1.05) rotate(-5deg); }
+  20% { transform: scale(1.05) rotate(5deg); }
+  30% { transform: scale(1.05) rotate(-5deg); }
+  40% { transform: scale(1.05) rotate(5deg); }
+  50% { transform: scale(1.05) rotate(-3deg); }
+  60% { transform: scale(1.05) rotate(3deg); }
+  70% { transform: scale(1.1) rotate(0deg); }
+  100% { transform: scale(15) rotate(0deg); }
+}
+
+@keyframes splashFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; pointer-events: none; }
+}

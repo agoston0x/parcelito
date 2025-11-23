@@ -80,9 +80,12 @@ function PresentationContent() {
     }
   }, [searchParams]);
 
-  // Poll for slide updates
+  // Poll for slide updates (only when tab visible)
   useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+
     const fetchSlide = async () => {
+      if (document.hidden) return; // Skip if tab not visible
       try {
         const res = await fetch('/api/presentation');
         const data = await res.json();
@@ -92,9 +95,27 @@ function PresentationContent() {
       }
     };
 
-    fetchSlide();
-    const interval = setInterval(fetchSlide, isPresenter ? 1000 : 500);
-    return () => clearInterval(interval);
+    const startPolling = () => {
+      fetchSlide();
+      interval = setInterval(fetchSlide, isPresenter ? 1000 : 500);
+    };
+
+    const stopPolling = () => {
+      if (interval) clearInterval(interval);
+    };
+
+    const handleVisibility = () => {
+      if (document.hidden) stopPolling();
+      else startPolling();
+    };
+
+    startPolling();
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      stopPolling();
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [isPresenter]);
 
   // Update slide (presenter only)

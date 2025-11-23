@@ -12,9 +12,13 @@ export default function Home() {
   const [recipientType, setRecipientType] = useState<'world' | 'email'>('world');
   const [isVerified, setIsVerified] = useState(false);
   const [selectedGiftParcelito, setSelectedGiftParcelito] = useState(0);
+  const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
     setIsWorldApp(MiniKit.isInstalled());
+    // Hide splash after animation completes
+    const timer = setTimeout(() => setShowSplash(false), 2400);
+    return () => clearTimeout(timer);
   }, []);
 
   const showToast = useCallback((message: string) => {
@@ -39,6 +43,13 @@ export default function Home() {
 
   return (
     <div id="app">
+      {/* Splash Screen */}
+      {showSplash && (
+        <div className="splash-screen">
+          <img src="/parcelito.png" alt="Parcelito" className="splash-logo" />
+        </div>
+      )}
+
       {/* Header */}
       <header className="header">
         <img src="/parcelito.png" alt="Parcelito" className="logo" />
