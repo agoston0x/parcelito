@@ -14,9 +14,10 @@ Token baskets for everyone. A World Mini App for buying, creating, and gifting c
 
 - **World Chain** - Free gas for World ID verified users
 - **World MiniKit** - Native World App integration
-- **ERC-6551 TBAs** - Each basket is an NFT that owns tokens
-- **Uniswap** - Decentralized token swaps
-- **Supabase** - Real-time presentation sync
+users
+- **ENS** - Usernames minted as subdomains under parcelito.eth, information about user activity including token baskets purchased or gifted, stored in text records. Possiblity for encryption.
+- **1Inch** - Tokens purchased seamlessly on multiple chains in Background.
+-  
 
 ## Getting Started
 
@@ -42,15 +43,9 @@ The `/ethglobal` route is a real-time presentation for demos:
 
 Presenter can control slides with arrow keys or on-screen buttons. All viewers sync in real-time.
 
-### Supabase Setup
-
-Run the SQL in `supabase-setup.sql` in your Supabase dashboard to enable real-time sync.
 
 ## Environment Variables
 
-```
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 NEXT_PUBLIC_PRESENTER_TOKEN=your_secret_presenter_token
 NEXT_PUBLIC_WLD_APP_ID=your_world_app_id
 ```
