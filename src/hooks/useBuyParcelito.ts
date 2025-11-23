@@ -5,11 +5,11 @@ import { MiniKit } from '@worldcoin/minikit-js';
 import { PARCELITO_COMPOSITIONS } from '@/lib/ens';
 import { keccak256, encodePacked, namehash } from 'viem';
 
-// L2Registry (parcelitos.eth) on World Chain - Durin deployment
-const PARCELITO_REGISTRY = '0xb6920Bb34e1528e758286aBD577c3F16994730d3';
+// L2Registry (parcelito.eth) on World Chain - DEPLOYED!
+const PARCELITO_REGISTRY = '0x6383b5B1E7a67eC5579e8953e8FE9f3c09Ca7f40';
 
-// Base node for parcelitos.eth (namehash)
-const BASE_NODE = namehash('parcelitos.eth');
+// Base node for parcelito.eth (namehash)
+const BASE_NODE = namehash('parcelito.eth');
 
 // Durin L2Registry ABI (only functions we need)
 const REGISTRY_ABI = [
