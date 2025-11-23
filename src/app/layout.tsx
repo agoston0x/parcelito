@@ -12,6 +12,10 @@ const nunito = Nunito({
 export const metadata: Metadata = {
   title: "Parcelito",
   description: "Token baskets for everyone",
+  icons: {
+    icon: "/parcelito.png",
+    apple: "/parcelito.png",
+  },
 };
 
 export default function RootLayout({
