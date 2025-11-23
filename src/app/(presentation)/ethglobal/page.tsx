@@ -7,60 +7,54 @@ import { useSearchParams } from 'next/navigation';
 // SLIDE CONTENT - Edit your slides here
 // ============================================
 const slides = [
+  // SLIDE 1 - TITLE
   {
-    title: "Parcelito",
-    subtitle: "Token baskets for everyone",
-    content: "ETHGlobal Buenos Aires 2025",
-    type: "title" as const,
+    type: "hero" as const,
+    word: "parcelito",
+    subtitle: "Crypto gift baskets for everyone",
   },
+  // SLIDE 2 - PROBLEM
   {
-    title: "The Problem",
-    content: "Crypto is intimidating for newcomers. Too many tokens, too much complexity, too much risk.",
-    type: "text" as const,
-  },
-  {
-    title: "Our Solution",
-    content: "Parcelitos: curated token baskets that anyone can buy, create, or gift.",
-    bullets: [
-      "One-click diversification",
-      "Community-curated strategies",
-      "Gift crypto to friends via World ID",
+    type: "problem" as const,
+    title: "Crypto gifting is broken",
+    problems: [
+      { emoji: "😵", text: "Send 0x7a3b... to grandma?" },
+      { emoji: "🤯", text: "Picking tokens = paralysis" },
+      { emoji: "🚨", text: "Scam portfolios everywhere" },
     ],
-    type: "bullets" as const,
   },
+  // SLIDE 3 - SOLUTION
   {
-    title: "How It Works",
-    content: "",
-    bullets: [
-      "1. Browse curated baskets or create your own",
-      "2. Buy with one transaction (Uniswap)",
-      "3. Each basket is an NFT (ERC-6551 TBA)",
-      "4. Gift baskets to World ID verified users",
+    type: "solution" as const,
+    title: "Parcelito: Curated token baskets",
+    baskets: [
+      { name: "Blue Chip DeFi", tokens: ["ETH", "USDC", "AAVE"], color: "from-blue-500 to-indigo-600" },
+      { name: "Latin America", tokens: ["MXNB", "BRL", "ARS"], color: "from-green-500 to-emerald-600" },
+      { name: "Bitcoin Maxi", tokens: ["BTC", "WBTC", "cbBTC"], color: "from-orange-500 to-amber-500" },
     ],
-    type: "bullets" as const,
+    note: "Only verified humans can create portfolios",
   },
+  // SLIDE 4 - HOW IT WORKS
   {
-    title: "Tech Stack",
-    content: "",
-    bullets: [
-      "World Chain - free gas for verified users",
-      "World MiniKit - native World App integration",
-      "ERC-6551 TBAs - NFTs that own tokens",
-      "Uniswap - decentralized token swaps",
+    type: "steps" as const,
+    title: "Buy. Create. Gift.",
+    steps: [
+      { emoji: "🛒", title: "Buy basket", desc: "Any token, any chain" },
+      { emoji: "🎨", title: "Create basket", desc: "World ID required" },
+      { emoji: "🎁", title: "Gift it", desc: "Via @username or link" },
     ],
-    type: "bullets" as const,
   },
+  // SLIDE 5 - TECH STACK
   {
-    title: "Demo",
-    subtitle: "Let's see it in action",
-    content: "",
-    type: "title" as const,
-  },
-  {
-    title: "Thank You!",
-    subtitle: "Questions?",
-    content: "github.com/anthropics/parcelito",
-    type: "title" as const,
+    type: "techstack" as const,
+    title: "Built on",
+    techs: [
+      { name: "World Chain", desc: "Free gas" },
+      { name: "1inch", desc: "Best rates" },
+      { name: "LayerZero", desc: "Cross-chain" },
+      { name: "ENS", desc: "Usernames" },
+    ],
+    tagline: "23M World App users, instant distribution",
   },
 ];
 
@@ -174,38 +168,87 @@ function PresentationContent() {
       {/* Main slide area */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="max-w-4xl w-full text-center text-white">
-          {slide.type === 'title' && (
-            <div className="space-y-6">
-              <h1 className="text-5xl md:text-8xl font-bold">{slide.title}</h1>
-              {slide.subtitle && (
-                <p className="text-2xl md:text-4xl opacity-90">{slide.subtitle}</p>
-              )}
-              {slide.content && (
-                <p className="text-xl md:text-2xl opacity-70 mt-8">{slide.content}</p>
-              )}
+          {/* SLIDE 1 - HERO/TITLE */}
+          {slide.type === 'hero' && (
+            <div className="flex flex-col items-center justify-center">
+              <img src="/parcelito.png" alt="Parcelito" className="w-40 h-40 md:w-56 md:h-56 rounded-3xl shadow-2xl mb-8" />
+              <h1 className="text-5xl md:text-8xl font-bold mb-4">{slide.word}</h1>
+              <p className="text-2xl md:text-3xl opacity-90">{slide.subtitle || "Crypto gift baskets for everyone"}</p>
             </div>
           )}
 
-          {slide.type === 'text' && (
-            <div className="space-y-8">
-              <h2 className="text-4xl md:text-6xl font-bold">{slide.title}</h2>
-              <p className="text-xl md:text-3xl opacity-90 leading-relaxed">{slide.content}</p>
-            </div>
-          )}
-
-          {slide.type === 'bullets' && (
-            <div className="space-y-8 text-left max-w-2xl mx-auto">
-              <h2 className="text-4xl md:text-6xl font-bold text-center">{slide.title}</h2>
-              <ul className="space-y-4">
-                {slide.bullets?.map((bullet, i) => (
-                  <li key={i} className="text-xl md:text-2xl flex items-start gap-4">
-                    <span className="text-orange-200">•</span>
-                    <span>{bullet}</span>
-                  </li>
+          {/* SLIDE 2 - PROBLEM */}
+          {slide.type === 'problem' && (
+            <div className="space-y-12">
+              <h1 className="text-4xl md:text-7xl font-bold">{slide.title}</h1>
+              <div className="flex flex-col md:flex-row gap-8 justify-center items-stretch">
+                {slide.problems?.map((p: {emoji: string, text: string}, i: number) => (
+                  <div key={i} className="bg-white/10 backdrop-blur rounded-2xl p-8 flex-1 max-w-xs">
+                    <div className="text-6xl mb-4">{p.emoji}</div>
+                    <p className="text-xl md:text-2xl font-medium">{p.text}</p>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </div>
           )}
+
+          {/* SLIDE 3 - SOLUTION */}
+          {slide.type === 'solution' && (
+            <div className="space-y-10">
+              <h1 className="text-3xl md:text-5xl font-bold">{slide.title}</h1>
+              <div className="flex flex-col md:flex-row gap-6 justify-center">
+                {slide.baskets?.map((b: {name: string, tokens: string[], color: string}, i: number) => (
+                  <div key={i} className={`bg-gradient-to-br ${b.color} rounded-2xl p-6 w-64 shadow-xl`}>
+                    <h3 className="text-xl font-bold mb-3">{b.name}</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {b.tokens.map((t: string, j: number) => (
+                        <span key={j} className="bg-white/20 px-3 py-1 rounded-full text-sm font-medium">{t}</span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xl opacity-80 mt-6">✓ {slide.note}</p>
+            </div>
+          )}
+
+          {/* SLIDE 4 - STEPS */}
+          {slide.type === 'steps' && (
+            <div className="space-y-12">
+              <h1 className="text-4xl md:text-7xl font-bold">{slide.title}</h1>
+              <div className="flex flex-col md:flex-row gap-6 justify-center items-center">
+                {slide.steps?.map((s: {emoji: string, title: string, desc: string}, i: number) => (
+                  <div key={i} className="flex items-center gap-4">
+                    <div className="bg-white/10 backdrop-blur rounded-2xl p-8 text-center w-56">
+                      <div className="text-5xl mb-3">{s.emoji}</div>
+                      <h3 className="text-2xl font-bold mb-1">{s.title}</h3>
+                      <p className="text-lg opacity-80">{s.desc}</p>
+                    </div>
+                    {i < (slide.steps?.length || 0) - 1 && (
+                      <div className="text-4xl opacity-50 hidden md:block">→</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* SLIDE 5 - TECH STACK */}
+          {slide.type === 'techstack' && (
+            <div className="space-y-10">
+              <h1 className="text-4xl md:text-6xl font-bold">{slide.title}</h1>
+              <div className="flex flex-wrap gap-6 justify-center">
+                {slide.techs?.map((t: {name: string, desc: string}, i: number) => (
+                  <div key={i} className="bg-white/20 backdrop-blur rounded-xl px-8 py-6 text-center">
+                    <h3 className="text-2xl font-bold">{t.name}</h3>
+                    <p className="text-lg opacity-80">{t.desc}</p>
+                  </div>
+                ))}
+              </div>
+              <p className="text-2xl font-medium mt-8">{slide.tagline}</p>
+            </div>
+          )}
+
         </div>
       </div>
 

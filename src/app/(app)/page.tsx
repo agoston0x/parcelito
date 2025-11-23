@@ -2,8 +2,76 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { MiniKit } from '@worldcoin/minikit-js';
+import { useBuyParcelito } from '@/hooks/useBuyParcelito';
+import { PARCELITO_COMPOSITIONS } from '@/lib/ens';
 
 type Tab = 'home' | 'buy' | 'create' | 'gift';
+
+// Simple pie chart component
+const PieChart = ({ tokens, allocations, colors }: { tokens: string[], allocations: number[], colors: string[] }) => {
+  let cumulativePercent = 0;
+  const segments = allocations.map((percent, i) => {
+    const startPercent = cumulativePercent;
+    cumulativePercent += percent;
+    const startAngle = (startPercent / 100) * 360;
+    const endAngle = (cumulativePercent / 100) * 360;
+    const largeArc = endAngle - startAngle > 180 ? 1 : 0;
+    const startX = 50 + 40 * Math.cos((startAngle - 90) * Math.PI / 180);
+    const startY = 50 + 40 * Math.sin((startAngle - 90) * Math.PI / 180);
+    const endX = 50 + 40 * Math.cos((endAngle - 90) * Math.PI / 180);
+    const endY = 50 + 40 * Math.sin((endAngle - 90) * Math.PI / 180);
+    return (
+      <path
+        key={i}
+        d={`M 50 50 L ${startX} ${startY} A 40 40 0 ${largeArc} 1 ${endX} ${endY} Z`}
+        fill={colors[i % colors.length]}
+      />
+    );
+  });
+  return (
+    <div className="flex items-center gap-4">
+      <svg viewBox="0 0 100 100" className="w-20 h-20">
+        {segments}
+        <circle cx="50" cy="50" r="25" fill="white" />
+      </svg>
+      <div className="flex flex-wrap gap-2">
+        {tokens.map((token, i) => (
+          <div key={i} className="flex items-center gap-1 text-xs">
+            <div className="w-2 h-2 rounded-full" style={{ background: colors[i % colors.length] }} />
+            <span className="text-gray-600">{token} {allocations[i]}%</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const PIE_COLORS = ['#FF7A00', '#3B82F6', '#10B981', '#8B5CF6', '#F59E0B'];
+
+// Parcelito data with allocations
+const bestValueParcelitos = [
+  { id: '1', icon: 'L1', name: 'Layer 1s', tokens: ['ETH', 'SOL', 'AVAX'], allocations: [50, 30, 20], return: 24.5, buyers: 1243, bg: 'linear-gradient(135deg, #627EEA, #3B82F6)' },
+  { id: '2', icon: 'RWA', name: 'Real World', tokens: ['PAXG', 'ONDO', 'RWA'], allocations: [40, 35, 25], return: 12.1, buyers: 856, bg: 'linear-gradient(135deg, #F7931A, #FCD535)' },
+  { id: '3', icon: 'DeFi', name: 'DeFi Blue', tokens: ['UNI', 'AAVE', 'MKR'], allocations: [35, 35, 30], return: 18.7, buyers: 2105, bg: 'linear-gradient(135deg, #00D395, #10B981)' },
+];
+
+const moreParcelitos = [
+  { id: '4', icon: 'AI', name: 'AI Tokens', tokens: ['RENDER', 'FET', 'OCEAN'], allocations: [40, 35, 25], return: 34.2, buyers: 567, bg: 'linear-gradient(135deg, #8B5CF6, #A855F7)' },
+  { id: '5', icon: 'Meme', name: 'Top Memes', tokens: ['DOGE', 'SHIB', 'PEPE'], allocations: [40, 30, 30], return: -5.2, buyers: 3421, bg: 'linear-gradient(135deg, #FF6B6B, #EE5A5A)' },
+  { id: '6', icon: 'L2', name: 'Layer 2s', tokens: ['ARB', 'OP', 'MATIC'], allocations: [40, 35, 25], return: 15.8, buyers: 1892, bg: 'linear-gradient(135deg, #3B82F6, #1D4ED8)' },
+];
+
+const classicCommunity = [
+  { id: 'c1', creator: '@alphacrypto', name: 'AI Picks', tokens: ['RENDER', 'FET', 'OCEAN'], allocations: [40, 35, 25], return: 34.2, followers: 423 },
+  { id: 'c2', creator: '@safeyields', name: 'Stable Yield', tokens: ['USDC', 'DAI', 'FRAX'], allocations: [40, 30, 30], return: 8.4, followers: 892 },
+  { id: 'c3', creator: '@indexfund', name: 'Blue Chips', tokens: ['BTC', 'ETH', 'SOL'], allocations: [40, 35, 25], return: 22.1, followers: 1205 },
+];
+
+const degenCommunity = [
+  { id: 'd1', creator: '@moonshot', name: 'Moon Bets', tokens: ['PEPE', 'WIF', 'BONK'], allocations: [40, 35, 25], return: 156.3, followers: 3421 },
+  { id: 'd2', creator: '@degen_plays', name: 'Leverage Long', tokens: ['BTC-3X', 'ETH-3X'], allocations: [50, 50], return: -42.5, followers: 567 },
+  { id: 'd3', creator: '@ape_in', name: 'New Launches', tokens: ['???', '???', '???'], allocations: [34, 33, 33], return: 89.2, followers: 234 },
+];
 
 export default function Home() {
   const [isWorldApp, setIsWorldApp] = useState(false);
@@ -13,6 +81,41 @@ export default function Home() {
   const [isVerified, setIsVerified] = useState(false);
   const [selectedGiftParcelito, setSelectedGiftParcelito] = useState(0);
   const [showSplash, setShowSplash] = useState(true);
+  const [showMoreParcelitos, setShowMoreParcelitos] = useState(false);
+  const [expandedParcelito, setExpandedParcelito] = useState<string | null>(null);
+  const [communityMode, setCommunityMode] = useState<'classic' | 'degen'>('classic');
+  const [worldUserSearch, setWorldUserSearch] = useState('');
+  const [searchResults, setSearchResults] = useState<{username: string, name: string}[]>([]);
+  const [selectedRecipient, setSelectedRecipient] = useState<string | null>(null);
+  const [emailAddress, setEmailAddress] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [buyModal, setBuyModal] = useState<{open: boolean, parcelito: string | null, amount: string}>({open: false, parcelito: null, amount: '100'});
+  const [degenModal, setDegenModal] = useState(false);
+
+  const { recordPurchase, isLoading: isBuying } = useBuyParcelito();
+
+  // Mock World users for search
+  const mockWorldUsers = [
+    { username: 'alice', name: 'Alice Chen' },
+    { username: 'bob', name: 'Bob Smith' },
+    { username: 'carlos', name: 'Carlos Rodriguez' },
+    { username: 'diana', name: 'Diana Kim' },
+    { username: 'emma', name: 'Emma Wilson' },
+    { username: 'frank', name: 'Frank Lee' },
+  ];
+
+  // Search World users
+  useEffect(() => {
+    if (worldUserSearch.length >= 2) {
+      const results = mockWorldUsers.filter(u =>
+        u.username.toLowerCase().includes(worldUserSearch.toLowerCase()) ||
+        u.name.toLowerCase().includes(worldUserSearch.toLowerCase())
+      );
+      setSearchResults(results);
+    } else {
+      setSearchResults([]);
+    }
+  }, [worldUserSearch]);
 
   useEffect(() => {
     setIsWorldApp(MiniKit.isInstalled());
@@ -129,60 +232,145 @@ export default function Home() {
 
         {/* Buy Tab */}
         <div className={`tab-content ${activeTab === 'buy' ? 'active' : ''}`}>
-          <div className="search-bar">
-            <input type="text" placeholder="Search parcelitos..." className="search-input" />
-          </div>
-
           <div className="section-header">
-            <h2>Classic Parcelitos</h2>
+            <h2>Best Value</h2>
             <span className="badge">By Parcelito</span>
           </div>
 
-          <div className="parcelito-grid">
-            {[
-              { icon: 'L1', name: 'Layer 1s', tokens: 'ETH, SOL, AVAX', change: '+24.5%', buyers: '1.2k', bg: 'linear-gradient(135deg, #627EEA, #3B82F6)' },
-              { icon: 'RWA', name: 'Real World', tokens: 'PAXG, ONDO', change: '+12.1%', buyers: '856', bg: 'linear-gradient(135deg, #F7931A, #FCD535)' },
-              { icon: 'DeFi', name: 'DeFi Blue', tokens: 'UNI, AAVE, MKR', change: '+18.7%', buyers: '2.1k', bg: 'linear-gradient(135deg, #00D395, #10B981)' },
-              { icon: 'Meme', name: 'Top Memes', tokens: 'DOGE, SHIB, PEPE', change: '-5.2%', buyers: '3.4k', bg: 'linear-gradient(135deg, #FF6B6B, #EE5A5A)', negative: true },
-            ].map((item, i) => (
-              <div key={i} className="buy-card">
-                <div className="buy-card-icon" style={{background: item.bg}}>{item.icon}</div>
-                <div className="buy-card-name">{item.name}</div>
-                <div className="buy-card-tokens">{item.tokens}</div>
-                <div className="buy-card-stats">
-                  <span className={item.negative ? 'negative' : 'positive'}>{item.change}</span>
-                  <span className="buyers">{item.buyers} buyers</span>
+          <div className="parcelito-list">
+            {bestValueParcelitos.map((item) => (
+              <div
+                key={item.id}
+                className="parcelito-card-expandable"
+                onClick={() => setExpandedParcelito(expandedParcelito === item.id ? null : item.id)}
+              >
+                <div className="card-main">
+                  <div className="parcelito-icon" style={{background: item.bg}}>
+                    <span>{item.icon}</span>
+                  </div>
+                  <div className="parcelito-info">
+                    <div className="parcelito-name">{item.name}</div>
+                    <div className="parcelito-tokens">{item.tokens.join(', ')}</div>
+                  </div>
+                  <div className="parcelito-stats">
+                    <div className={`parcelito-return ${item.return >= 0 ? 'positive' : 'negative'}`}>
+                      {item.return >= 0 ? '+' : ''}{item.return}%
+                    </div>
+                    <div className="parcelito-buyers">{item.buyers.toLocaleString()} buyers</div>
+                  </div>
+                  <svg className={`chevron ${expandedParcelito === item.id ? 'expanded' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M19 9l-7 7-7-7" />
+                  </svg>
                 </div>
-                <button className="buy-btn" onClick={(e) => { e.stopPropagation(); showToast(`Buying ${item.name}...`); }}>Buy</button>
+
+                {expandedParcelito === item.id && (
+                  <div className="card-expanded" onClick={(e) => e.stopPropagation()}>
+                    <PieChart tokens={item.tokens} allocations={item.allocations} colors={PIE_COLORS} />
+                    <button className="buy-btn-full" style={{marginTop: '12px'}} onClick={() => setBuyModal({open: true, parcelito: item.name, amount: '100'})}>
+                      Buy {item.name}
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {showMoreParcelitos && moreParcelitos.map((item) => (
+              <div
+                key={item.id}
+                className="parcelito-card-expandable"
+                onClick={() => setExpandedParcelito(expandedParcelito === item.id ? null : item.id)}
+              >
+                <div className="card-main">
+                  <div className="parcelito-icon" style={{background: item.bg}}>
+                    <span>{item.icon}</span>
+                  </div>
+                  <div className="parcelito-info">
+                    <div className="parcelito-name">{item.name}</div>
+                    <div className="parcelito-tokens">{item.tokens.join(', ')}</div>
+                  </div>
+                  <div className="parcelito-stats">
+                    <div className={`parcelito-return ${item.return >= 0 ? 'positive' : 'negative'}`}>
+                      {item.return >= 0 ? '+' : ''}{item.return}%
+                    </div>
+                    <div className="parcelito-buyers">{item.buyers.toLocaleString()} buyers</div>
+                  </div>
+                  <svg className={`chevron ${expandedParcelito === item.id ? 'expanded' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+
+                {expandedParcelito === item.id && (
+                  <div className="card-expanded" onClick={(e) => e.stopPropagation()}>
+                    <PieChart tokens={item.tokens} allocations={item.allocations} colors={PIE_COLORS} />
+                    <button className="buy-btn-full" style={{marginTop: '12px'}} onClick={() => setBuyModal({open: true, parcelito: item.name, amount: '100'})}>
+                      Buy {item.name}
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
 
-          <div className="section-header">
-            <h2>Community Parcelitos</h2>
-            <div className="mode-toggle">
-              <button className="mode-btn active">Normie</button>
-              <button className="mode-btn locked" onClick={() => showToast('Complete 3 actions to unlock!')}>Degen</button>
+          {!showMoreParcelitos && (
+            <button className="show-more-btn" onClick={() => setShowMoreParcelitos(true)}>
+              Show more
+            </button>
+          )}
+
+          <div className="section-header" style={{marginTop: '16px'}}>
+            <h2>Community</h2>
+            <div className="swipe-toggle">
+              <button
+                className={`swipe-option ${communityMode === 'classic' ? 'active' : ''}`}
+                onClick={() => setCommunityMode('classic')}
+              >Classic</button>
+              <button
+                className={`swipe-option ${communityMode === 'degen' ? 'active degen' : ''}`}
+                onClick={() => setCommunityMode('degen')}
+              >Degen</button>
             </div>
           </div>
 
-          <div className="community-list">
-            {[
-              { avatar: 'A', name: 'AI Picks', creator: '@alphacrypto', tokens: 'RENDER, FET, OCEAN', return: '+34.2%', followers: '423' },
-              { avatar: 'M', name: 'Gaming Giants', creator: '@metaverse_max', tokens: 'IMX, GALA, AXS', return: '+21.8%', followers: '287' },
-              { avatar: 'S', name: 'Stablecoin Yield', creator: '@safeyields', tokens: 'USDC, DAI, FRAX', return: '+8.4%', followers: '892' },
-            ].map((item, i) => (
-              <div key={i} className="community-card" onClick={() => showToast(`Opening ${item.name}...`)}>
-                <div className="creator-avatar">{item.avatar}</div>
-                <div className="community-info">
-                  <div className="community-name">{item.name}</div>
-                  <div className="community-creator">by {item.creator}</div>
-                  <div className="community-tokens">{item.tokens}</div>
+          <div className="parcelito-list compact">
+            {(communityMode === 'classic' ? classicCommunity : degenCommunity).map((item) => (
+              <div
+                key={item.id}
+                className="parcelito-card-expandable compact"
+                onClick={() => setExpandedParcelito(expandedParcelito === item.id ? null : item.id)}
+              >
+                <div className="card-main">
+                  <div className={`creator-avatar ${communityMode === 'degen' ? 'degen' : ''}`}>
+                    {item.creator.charAt(1).toUpperCase()}
+                  </div>
+                  <div className="parcelito-info">
+                    <div className="parcelito-name">{item.name}</div>
+                    <div className="parcelito-tokens">by {item.creator}</div>
+                  </div>
+                  <div className="parcelito-stats">
+                    <div className={`parcelito-return ${item.return >= 0 ? 'positive' : 'negative'}`}>
+                      {item.return >= 0 ? '+' : ''}{item.return}%
+                    </div>
+                    <div className="parcelito-buyers">{item.followers} followers</div>
+                  </div>
+                  <svg className={`chevron ${expandedParcelito === item.id ? 'expanded' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M19 9l-7 7-7-7" />
+                  </svg>
                 </div>
-                <div className="community-stats">
-                  <div className="community-return positive">{item.return}</div>
-                  <div className="community-followers">{item.followers} followers</div>
-                </div>
+
+                {expandedParcelito === item.id && (
+                  <div className="card-expanded" onClick={(e) => e.stopPropagation()}>
+                    <PieChart tokens={item.tokens} allocations={item.allocations} colors={communityMode === 'degen' ? ['#EF4444', '#DC2626', '#B91C1C'] : PIE_COLORS} />
+                    <button className={`buy-btn-full ${communityMode === 'degen' ? 'degen' : ''}`} style={{marginTop: '12px'}} onClick={() => {
+                      if (communityMode === 'degen') {
+                        setDegenModal(true);
+                      } else {
+                        showToast(`Following ${item.name}...`);
+                      }
+                    }}>
+                      Follow & Buy
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -296,25 +484,67 @@ export default function Home() {
             <div className="recipient-tabs">
               <button
                 className={`recipient-tab ${recipientType === 'world' ? 'active' : ''}`}
-                onClick={() => setRecipientType('world')}
+                onClick={() => { setRecipientType('world'); setSelectedRecipient(null); }}
               >
-                World Username
+                World User
               </button>
               <button
                 className={`recipient-tab ${recipientType === 'email' ? 'active' : ''}`}
-                onClick={() => setRecipientType('email')}
+                onClick={() => { setRecipientType('email'); setSelectedRecipient(null); }}
               >
                 Email
               </button>
             </div>
+
             {recipientType === 'world' ? (
-              <div className="recipient-input-wrapper">
-                <span className="at-symbol">@</span>
-                <input type="text" placeholder="username" className="recipient-input" />
+              <div className="world-search-section">
+                {selectedRecipient ? (
+                  <div className="selected-recipient">
+                    <div className="recipient-avatar">{selectedRecipient.charAt(0).toUpperCase()}</div>
+                    <span>@{selectedRecipient}</span>
+                    <button className="clear-recipient" onClick={() => { setSelectedRecipient(null); setWorldUserSearch(''); }}>×</button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="recipient-input-wrapper">
+                      <span className="at-symbol">@</span>
+                      <input
+                        type="text"
+                        placeholder="Search World users..."
+                        className="recipient-input"
+                        value={worldUserSearch}
+                        onChange={(e) => setWorldUserSearch(e.target.value)}
+                      />
+                    </div>
+                    {searchResults.length > 0 && (
+                      <div className="search-results">
+                        {searchResults.map((user) => (
+                          <div
+                            key={user.username}
+                            className="search-result-item"
+                            onClick={() => { setSelectedRecipient(user.username); setWorldUserSearch(''); setSearchResults([]); }}
+                          >
+                            <div className="recipient-avatar">{user.username.charAt(0).toUpperCase()}</div>
+                            <div>
+                              <div className="result-name">{user.name}</div>
+                              <div className="result-username">@{user.username}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             ) : (
               <div className="recipient-input-wrapper">
-                <input type="email" placeholder="friend@email.com" className="recipient-input" />
+                <input
+                  type="email"
+                  placeholder="friend@email.com"
+                  className="recipient-input"
+                  value={emailAddress}
+                  onChange={(e) => setEmailAddress(e.target.value)}
+                />
               </div>
             )}
           </div>
@@ -324,11 +554,174 @@ export default function Home() {
             <textarea placeholder="Happy birthday!" className="gift-message"></textarea>
           </div>
 
-          <button className="send-gift-btn" onClick={() => showToast(`Sending $${giftAmount} gift...`)}>
-            Send Gift
+          <button
+            className="send-gift-btn"
+            disabled={isSending || (recipientType === 'world' ? !selectedRecipient : !emailAddress)}
+            onClick={async () => {
+              setIsSending(true);
+              const parcelitoName = ['Layer 1s', 'Real World', 'DeFi Blue'][selectedGiftParcelito];
+
+              if (recipientType === 'email') {
+                try {
+                  const res = await fetch('/api/send-gift-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: emailAddress, amount: giftAmount, parcelito: parcelitoName }),
+                  });
+                  if (res.ok) {
+                    showToast(`Gift email sent to ${emailAddress}!`);
+                    setEmailAddress('');
+                  } else {
+                    showToast('Failed to send email');
+                  }
+                } catch {
+                  showToast('Failed to send email');
+                }
+              } else {
+                // Open World Chat with pre-filled message
+                const appId = process.env.NEXT_PUBLIC_WLD_APP_ID || 'app_staging_placeholder';
+                const message = `Hey! I'm sending you a $${giftAmount} ${parcelitoName} Parcelito gift! 🎁 Claim it here: https://parcelito.app/claim`;
+                const encodedPath = encodeURIComponent(`/${selectedRecipient}/draft`);
+                const worldChatUrl = `https://worldcoin.org/mini-app?app_id=${appId}&path=${encodedPath}&message=${encodeURIComponent(message)}`;
+
+                // Open World Chat
+                window.open(worldChatUrl, '_blank');
+                showToast(`Opening chat with @${selectedRecipient}...`);
+              }
+              setIsSending(false);
+            }}
+          >
+            {isSending ? 'Sending...' : recipientType === 'email' ? 'Send Gift Email' : 'Send via World Chat'}
           </button>
         </div>
       </main>
+
+      {/* Buy Modal */}
+      {buyModal.open && (
+        <div className="modal-overlay" onClick={() => setBuyModal({...buyModal, open: false})}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Buy {buyModal.parcelito}</h3>
+              <button className="modal-close" onClick={() => setBuyModal({...buyModal, open: false})}>×</button>
+            </div>
+
+            <div className="modal-body">
+              <div className="form-group">
+                <label>Amount (USD)</label>
+                <div className="amount-input-wrapper">
+                  <span className="currency">$</span>
+                  <input
+                    type="number"
+                    value={buyModal.amount}
+                    onChange={e => setBuyModal({...buyModal, amount: e.target.value})}
+                    className="amount-input"
+                  />
+                </div>
+                <div className="quick-amounts">
+                  {['50', '100', '250', '500'].map(amt => (
+                    <button
+                      key={amt}
+                      className={`quick-amount ${buyModal.amount === amt ? 'active' : ''}`}
+                      onClick={() => setBuyModal({...buyModal, amount: amt})}
+                    >
+                      ${amt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="token-preview">
+                <label>You will receive:</label>
+                <div className="token-chips">
+                  {buyModal.parcelito && PARCELITO_COMPOSITIONS[buyModal.parcelito as keyof typeof PARCELITO_COMPOSITIONS]?.tokens.map((token, i) => (
+                    <span key={token} className="token-chip selected">
+                      {token} ({PARCELITO_COMPOSITIONS[buyModal.parcelito as keyof typeof PARCELITO_COMPOSITIONS].allocations[i]}%)
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <p className="form-hint" style={{marginTop: '12px', textAlign: 'center'}}>
+                Payment via USDC on World Chain (gas sponsored)
+              </p>
+            </div>
+
+            <button
+              className="buy-btn-full"
+              disabled={isBuying || !buyModal.amount}
+              onClick={async () => {
+                if (!buyModal.parcelito) return;
+                // TODO: Get username from World App auth
+                const result = await recordPurchase(
+                  'demo-user', // Will be replaced with actual username from World App
+                  buyModal.parcelito as keyof typeof PARCELITO_COMPOSITIONS,
+                  parseFloat(buyModal.amount)
+                );
+                if (result.success) {
+                  showToast(`Purchased ${buyModal.parcelito}! Tx: ${result.transactionId?.slice(0, 10)}...`);
+                  setBuyModal({open: false, parcelito: null, amount: '100'});
+                } else {
+                  showToast(result.error || 'Purchase failed');
+                }
+              }}
+            >
+              {isBuying ? 'Processing...' : `Buy $${buyModal.amount} of ${buyModal.parcelito}`}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Degen Eligibility Modal */}
+      {degenModal && (
+        <div className="modal-overlay" onClick={() => setDegenModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 style={{color: '#EF4444'}}>Degen Mode Locked</h3>
+              <button className="modal-close" onClick={() => setDegenModal(false)}>×</button>
+            </div>
+
+            <div className="modal-body" style={{textAlign: 'center'}}>
+              <div style={{fontSize: '48px', marginBottom: '16px'}}>🔒</div>
+              <p style={{color: 'var(--gray-600)', marginBottom: '20px', lineHeight: 1.5}}>
+                Degen portfolios are high-risk and require eligibility verification to protect users.
+              </p>
+
+              <div style={{background: 'var(--gray-50)', borderRadius: '12px', padding: '16px', textAlign: 'left'}}>
+                <p style={{fontWeight: 600, marginBottom: '12px', color: 'var(--gray-700)'}}>Unlock by completing:</p>
+                <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
+                  <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                    <span style={{color: 'var(--green)'}}>✓</span>
+                    <span style={{color: 'var(--gray-600)'}}>Verify with World ID (Orb)</span>
+                  </div>
+                  <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                    <span style={{color: 'var(--gray-400)'}}>○</span>
+                    <span style={{color: 'var(--gray-600)'}}>Hold 500+ USDC balance</span>
+                  </div>
+                  <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                    <span style={{color: 'var(--gray-400)'}}>○</span>
+                    <span style={{color: 'var(--gray-600)'}}>Complete 3+ classic trades</span>
+                  </div>
+                  <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                    <span style={{color: 'var(--gray-400)'}}>○</span>
+                    <span style={{color: 'var(--gray-600)'}}>Acknowledge risk disclaimer</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button
+              className="buy-btn-full"
+              style={{background: 'linear-gradient(135deg, #EF4444, #DC2626)'}}
+              onClick={() => {
+                setDegenModal(false);
+                showToast('Complete eligibility steps to unlock degen mode');
+              }}
+            >
+              View Requirements
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Bottom Navigation */}
       <nav className="bottom-nav">
