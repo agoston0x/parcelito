@@ -4,57 +4,54 @@ import { Suspense, useEffect, useState, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 // ============================================
-// SLIDE CONTENT - Edit your slides here
+// SLIDE CONTENT - 6 Slides for EthGlobal
 // ============================================
 const slides = [
   // SLIDE 1 - TITLE
   {
     type: "hero" as const,
     word: "parcelito",
-    subtitle: "Crypto gift baskets for everyone",
+    subtitle: "Crypto gift baskets for anyone",
   },
   // SLIDE 2 - PROBLEM
   {
-    type: "problem" as const,
-    title: "Crypto gifting is broken",
-    problems: [
-      { emoji: "😵", text: "Send 0x7a3b... to grandma?" },
-      { emoji: "🤯", text: "Picking tokens = paralysis" },
-      { emoji: "🚨", text: "Scam portfolios everywhere" },
-    ],
+    type: "confused" as const,
+    title: "Non crypto natives are confused",
+    emoji: "😕",
+    question: "What to buy?",
   },
   // SLIDE 3 - SOLUTION
   {
     type: "solution" as const,
-    title: "Parcelito: Curated token baskets",
+    title: "Token baskets curated by Parcelito, and by community",
     baskets: [
-      { name: "Blue Chip DeFi", tokens: ["ETH", "USDC", "AAVE"], color: "from-blue-500 to-indigo-600" },
-      { name: "Latin America", tokens: ["MXNB", "BRL", "ARS"], color: "from-green-500 to-emerald-600" },
-      { name: "Bitcoin Maxi", tokens: ["BTC", "WBTC", "cbBTC"], color: "from-orange-500 to-amber-500" },
+      { name: "Blue Chip DeFi", tokens: "ETH USDC AAVE" },
+      { name: "Latin America", tokens: "MXNB BRL ARS" },
+      { name: "Bitcoin Maxi", tokens: "BTC WBTC cBTC" },
     ],
-    note: "Only verified humans can create portfolios",
+    note: "Only verified users can create, to prevent scams",
   },
   // SLIDE 4 - HOW IT WORKS
   {
     type: "steps" as const,
     title: "Buy. Create. Gift.",
     steps: [
-      { emoji: "🛒", title: "Buy basket", desc: "Any token, any chain" },
-      { emoji: "🎨", title: "Create basket", desc: "World ID required" },
-      { emoji: "🎁", title: "Gift it", desc: "Via @username or link" },
+      { emoji: "🛒", desc: "Any token\nAny chain" },
+      { emoji: "🎨", desc: "World ID\nrequired" },
+      { emoji: "🎁", desc: "@username\nor link" },
     ],
   },
   // SLIDE 5 - TECH STACK
   {
     type: "techstack" as const,
     title: "Built on",
-    techs: [
-      { name: "World Chain", desc: "Free gas" },
-      { name: "1inch", desc: "Best rates" },
-      { name: "LayerZero", desc: "Cross-chain" },
-      { name: "ENS", desc: "Usernames" },
-    ],
-    tagline: "23M World App users, instant distribution",
+    techs: ["World Chain", "1inch", "World ID", "ENS"],
+    tagline: "23M World App users • Instant distribution • Good use of World ID",
+  },
+  // SLIDE 6 - DEMO
+  {
+    type: "demo" as const,
+    title: "Demo",
   },
 ];
 
@@ -79,7 +76,7 @@ function PresentationContent() {
     let interval: NodeJS.Timeout | null = null;
 
     const fetchSlide = async () => {
-      if (document.hidden) return; // Skip if tab not visible
+      if (document.hidden) return;
       try {
         const res = await fetch('/api/presentation');
         const data = await res.json();
@@ -149,84 +146,76 @@ function PresentationContent() {
   }, [isPresenter, currentSlide, updateSlide]);
 
   const slide = slides[currentSlide];
-  const presenterClass = isPresenter ? 'hidden' : '';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-500 to-orange-600 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#FF6B00] flex flex-col font-sans">
       {/* Presenter indicator */}
       {isPresenter && (
-        <div className="absolute top-4 right-4 bg-green-500 text-white text-xs px-3 py-1 rounded-full">
+        <div className="absolute top-4 right-4 bg-green-500 text-white text-xs px-3 py-1 rounded-full z-50">
           PRESENTER MODE
         </div>
       )}
 
       {/* Slide counter */}
-      <div className="absolute top-4 left-4 text-white/70 text-sm">
+      <div className="absolute top-8 left-8 text-white/70 text-lg">
         {currentSlide + 1} / {slides.length}
       </div>
 
       {/* Main slide area */}
       <div className="flex-1 flex items-center justify-center p-8">
-        <div className="max-w-4xl w-full text-center text-white">
-          {/* SLIDE 1 - HERO/TITLE */}
+        <div className="max-w-5xl w-full text-center text-white">
+
+          {/* SLIDE 1 - HERO/TITLE with Logo */}
           {slide.type === 'hero' && (
-            <div className="flex flex-col items-center justify-center">
-              <img src="/parcelito.png" alt="Parcelito" className="w-40 h-40 md:w-56 md:h-56 rounded-3xl shadow-2xl mb-8" />
-              <h1 className="text-5xl md:text-8xl font-bold mb-4">{slide.word}</h1>
-              <p className="text-2xl md:text-3xl opacity-90">{slide.subtitle || "Crypto gift baskets for everyone"}</p>
+            <div className="flex flex-col items-center justify-center gap-5">
+              <div className="w-48 h-48 md:w-52 md:h-52 bg-white rounded-[40px] p-3 flex items-center justify-center">
+                <img src="/parcelito.png" alt="Parcelito" className="w-full h-full object-contain" />
+              </div>
+              <h1 className="text-6xl md:text-8xl font-bold">{slide.word}</h1>
+              <p className="text-3xl md:text-4xl opacity-90">{slide.subtitle}</p>
             </div>
           )}
 
-          {/* SLIDE 2 - PROBLEM */}
-          {slide.type === 'problem' && (
-            <div className="space-y-12">
-              <h1 className="text-4xl md:text-7xl font-bold">{slide.title}</h1>
-              <div className="flex flex-col md:flex-row gap-8 justify-center items-stretch">
-                {slide.problems?.map((p: {emoji: string, text: string}, i: number) => (
-                  <div key={i} className="bg-white/10 backdrop-blur rounded-2xl p-8 flex-1 max-w-xs">
-                    <div className="text-6xl mb-4">{p.emoji}</div>
-                    <p className="text-xl md:text-2xl font-medium">{p.text}</p>
-                  </div>
-                ))}
-              </div>
+          {/* SLIDE 2 - CONFUSED/PROBLEM */}
+          {slide.type === 'confused' && (
+            <div className="flex flex-col items-center gap-10">
+              <h1 className="text-4xl md:text-6xl font-bold">{slide.title}</h1>
+              <div className="text-[200px] leading-none">{slide.emoji}</div>
+              <p className="text-4xl md:text-5xl font-semibold">{slide.question}</p>
             </div>
           )}
 
           {/* SLIDE 3 - SOLUTION */}
           {slide.type === 'solution' && (
-            <div className="space-y-10">
+            <div className="flex flex-col items-center gap-12">
               <h1 className="text-3xl md:text-5xl font-bold">{slide.title}</h1>
-              <div className="flex flex-col md:flex-row gap-6 justify-center">
-                {slide.baskets?.map((b: {name: string, tokens: string[], color: string}, i: number) => (
-                  <div key={i} className={`bg-gradient-to-br ${b.color} rounded-2xl p-6 w-64 shadow-xl`}>
-                    <h3 className="text-xl font-bold mb-3">{b.name}</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {b.tokens.map((t: string, j: number) => (
-                        <span key={j} className="bg-white/20 px-3 py-1 rounded-full text-sm font-medium">{t}</span>
-                      ))}
-                    </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-4xl">
+                {slide.baskets?.map((b, i) => (
+                  <div
+                    key={i}
+                    className="rounded-2xl p-8 text-center"
+                    style={{
+                      backgroundColor: i === 0 ? '#FF8533' : i === 1 ? '#FFA366' : '#FFB380'
+                    }}
+                  >
+                    <h3 className="text-2xl font-bold mb-4">{b.name}</h3>
+                    <p className="text-xl">{b.tokens}</p>
                   </div>
                 ))}
               </div>
-              <p className="text-xl opacity-80 mt-6">✓ {slide.note}</p>
+              <p className="text-2xl md:text-3xl font-medium">{slide.note}</p>
             </div>
           )}
 
           {/* SLIDE 4 - STEPS */}
           {slide.type === 'steps' && (
-            <div className="space-y-12">
-              <h1 className="text-4xl md:text-7xl font-bold">{slide.title}</h1>
-              <div className="flex flex-col md:flex-row gap-6 justify-center items-center">
-                {slide.steps?.map((s: {emoji: string, title: string, desc: string}, i: number) => (
-                  <div key={i} className="flex items-center gap-4">
-                    <div className="bg-white/10 backdrop-blur rounded-2xl p-8 text-center w-56">
-                      <div className="text-5xl mb-3">{s.emoji}</div>
-                      <h3 className="text-2xl font-bold mb-1">{s.title}</h3>
-                      <p className="text-lg opacity-80">{s.desc}</p>
-                    </div>
-                    {i < (slide.steps?.length || 0) - 1 && (
-                      <div className="text-4xl opacity-50 hidden md:block">→</div>
-                    )}
+            <div className="flex flex-col items-center gap-12">
+              <h1 className="text-4xl md:text-6xl font-bold">{slide.title}</h1>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-12 w-full max-w-4xl">
+                {slide.steps?.map((s, i) => (
+                  <div key={i} className="text-center">
+                    <div className="text-[100px] leading-none mb-4">{s.emoji}</div>
+                    <p className="text-xl md:text-2xl whitespace-pre-line">{s.desc}</p>
                   </div>
                 ))}
               </div>
@@ -235,24 +224,40 @@ function PresentationContent() {
 
           {/* SLIDE 5 - TECH STACK */}
           {slide.type === 'techstack' && (
-            <div className="space-y-10">
+            <div className="flex flex-col items-center gap-12">
               <h1 className="text-4xl md:text-6xl font-bold">{slide.title}</h1>
-              <div className="flex flex-wrap gap-6 justify-center">
-                {slide.techs?.map((t: {name: string, desc: string}, i: number) => (
-                  <div key={i} className="bg-white/20 backdrop-blur rounded-xl px-8 py-6 text-center">
-                    <h3 className="text-2xl font-bold">{t.name}</h3>
-                    <p className="text-lg opacity-80">{t.desc}</p>
+              <div className="grid grid-cols-2 gap-8 w-full max-w-3xl">
+                {slide.techs?.map((t, i) => (
+                  <div
+                    key={i}
+                    className="bg-white/10 rounded-2xl p-10 text-center"
+                  >
+                    <h3 className="text-3xl md:text-4xl font-bold">{t}</h3>
                   </div>
                 ))}
               </div>
-              <p className="text-2xl font-medium mt-8">{slide.tagline}</p>
+              <p className="text-xl md:text-2xl font-medium">{slide.tagline}</p>
+            </div>
+          )}
+
+          {/* SLIDE 6 - DEMO */}
+          {slide.type === 'demo' && (
+            <div className="flex flex-col items-center justify-center">
+              <h1 className="text-6xl md:text-8xl font-bold">{slide.title}</h1>
             </div>
           )}
 
         </div>
       </div>
 
-      {/* Presenter controls - big touch-friendly buttons */}
+      {/* Navigation hint */}
+      {!isPresenter && (
+        <div className="absolute bottom-8 right-8 text-white/70 text-lg">
+          Press ← → to navigate
+        </div>
+      )}
+
+      {/* Presenter controls */}
       {isPresenter && (
         <div className="fixed bottom-0 left-0 right-0 p-6 flex justify-between items-center bg-black/20">
           <button
@@ -280,11 +285,6 @@ function PresentationContent() {
           </button>
         </div>
       )}
-
-      {/* Logo */}
-      <div className={"absolute bottom-4 left-4 " + presenterClass}>
-        <img src="/parcelito.png" alt="Parcelito" className="w-12 h-12 rounded-xl" />
-      </div>
     </div>
   );
 }
@@ -293,7 +293,7 @@ function PresentationContent() {
 export default function EthGlobalPresentation() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+      <div className="min-h-screen bg-[#FF6B00] flex items-center justify-center">
         <div className="text-white text-2xl">Loading...</div>
       </div>
     }>
